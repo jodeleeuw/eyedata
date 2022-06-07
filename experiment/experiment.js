@@ -85,10 +85,60 @@ const taskInstructions = {
 // Recording Trials
 // - 13 calibration points (allows testing with 9 and 5 in training set)
 // - 30 (60? 90?) randomly uniformly sampled fixation points in two blocks
+const calibration_parameters = [
+  { x: 10, y: 10, type: 'calibration' },
+  { x: 50, y: 10, type: 'calibration' },
+  { x: 90, y: 10, type: 'calibration' },
+  { x: 10, y: 50, type: 'calibration' },
+  { x: 50, y: 50, type: 'calibration' },
+  { x: 90, y: 50, type: 'calibration' },
+  { x: 10, y: 90, type: 'calibration' },
+  { x: 50, y: 90, type: 'calibration' },
+  { x: 90, y: 90, type: 'calibration' },
+  { x: 30, y: 30, type: 'calibration' },
+  { x: 70, y: 30, type: 'calibration' },
+  { x: 30, y: 70, type: 'calibration' },
+  { x: 70, y: 70, type: 'calibration' }
+]
 
+const testTrial = {
+  type: jsPsychHtmlVideoResponse,
+  stimulus: ()=>{
+    return `<div style="position: relative; width:100vw; height: 100vh;"><div class="fixation-point" style="top:${jsPsych.timelineVariable('y')}%; left:${jsPsych.timelineVariable('x')}%;"></div></div>`
+  },
+  recording_duration: 2000,
+  show_done_button: false,
+  data:{
+    x: jsPsych.timelineVariable('x'),
+    y: jsPsych.timelineVariable('y'),
+    point_type: jsPsych.timelineVariable('type')
+  },
+  on_finish: (data) => {
+    console.log(data.response);
+    fetch('server/save_webm.php',{
+      method: 'POST',
+      body: JSON.stringify({
+        x: data.x,
+        y: data.y,
+        point_type: data.point_type,
+        response: data.response}),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+  }
+}
+
+const calibration = {
+  timeline: [testTrial],
+  timeline_variables: calibration_parameters,
+}
+
+// Run Experiment
 jsPsych.run([
-  instructions, 
+  // instructions, 
   cameraSetup, 
-  fullscreen,
-  taskInstructions
+  // fullscreen,
+  // taskInstructions,
+  calibration
 ]);
