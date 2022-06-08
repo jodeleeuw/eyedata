@@ -1,3 +1,10 @@
+const n_test_trials = 10;
+const trial_duration = 2000;
+const min_x = 5;
+const max_x = 95;
+const min_y = 5;
+const max_y = 95;
+
 const jsPsych = initJsPsych();
 
 // Instructions
@@ -101,6 +108,16 @@ const calibration_parameters = [
   { x: 70, y: 70, type: 'calibration' }
 ]
 
+const test_parameters = [];
+
+for(let i = 0; i < n_test_trials; i++) {
+  test_parameters.push({
+    x: jsPsych.randomization.randomInt(min_x, max_x),
+    y: jsPsych.randomization.randomInt(min_y, max_y),
+    type: 'test'
+  });
+}
+
 const testTrial = {
   type: jsPsychHtmlVideoResponse,
   stimulus: ()=>{
@@ -134,11 +151,17 @@ const calibration = {
   timeline_variables: calibration_parameters,
 }
 
+const test = {
+  timeline: [testTrial],
+  timeline_variables: test_parameters,
+}
+
 // Run Experiment
 jsPsych.run([
   // instructions, 
   cameraSetup, 
   // fullscreen,
   // taskInstructions,
-  calibration
+  // calibration,
+  test
 ]);
