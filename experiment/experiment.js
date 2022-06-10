@@ -1,9 +1,13 @@
-const n_test_trials = 10;
-const trial_duration = 2000;
+const n_test_trials = 90;
+const n_test_trials_per_block = 30;
+const trial_duration = 1500;
+const saccade_time = 500;
 const min_x = 5;
 const max_x = 95;
 const min_y = 5;
 const max_y = 95;
+
+let n_complete = 0;
 
 const jsPsych = initJsPsych();
 
@@ -19,6 +23,7 @@ const instructions = {
             <p>Eye tracking is a commonly used method in psychological experiments, but is currently difficult to do online.</p>
             <p>Your participation in this experiment will help us test new tools for eye tracking so that future experiments can get better data.</p>`,
       choices: ["Continue"],
+      css_classes: ["instructions"],
     },
     {
       type: jsPsychHtmlButtonResponse,
@@ -28,11 +33,13 @@ const instructions = {
             <p>If you are not comfortable with the videos we record during this experiment being released to the public, you should exit the experiment.</p>
             <p>You will also have a chance at the end of the experiment to decide whether to exclude your data from the public dataset, in case you change your mind during the experiment.</p>`,
       choices: ["I understand that the videos will be public"],
+      css_classes: ["instructions"],
     },
     {
       type: jsPsychHtmlButtonResponse,
       stimulus: `<p>Let's begin by getting your camera ready.</p>`,
       choices: ["Continue"],
+      css_classes: ["instructions"],
     },
   ],
 };
@@ -45,6 +52,7 @@ const cameraSetup = {
       stimulus: `<p>When you click the button below you will be prompted to allow access to your camera.</p>
         <p>If you have more than one camera connected to your computer, you can select which one to use.</p>`,
       choices: ["Continue"],
+      css_classes: ["instructions"],
     },
     {
       type: jsPsychInitializeCamera,
@@ -82,12 +90,26 @@ const taskInstructions = {
         <div style="position: relative; width:100%; height: 2em;"><div class="fixation-point" style="top:50%; left:50%;"></div></div>
         <p>While the dot is on the screen, please keep your gaze locked onto the dot.</p>`,
       choices: ["Continue"],
+      css_classes: ["instructions"],
     },
     {
       type: jsPsychHtmlButtonResponse,
       stimulus: `<p>While the dot is on the screen and your gaze is locked onto the dot, please move your head!</p>
         <p>Moving your head slightly left or right, tilting your head to the side, and moving slightly closer or further from the monitor will help us get better data about different poses that people may look at the location.</p>`,
       choices: ["Continue"],
+      css_classes: ["instructions"],
+    },
+    {
+      type: jsPsychHtmlButtonResponse,
+      stimulus: `<p>There are ${
+        n_test_trials + 13
+      } dots that will be shown. Each one will be on the screen for ${
+        trial_duration / 1000
+      } seconds.</p>
+      <p>There will be a few short breaks in the experiment to let you take a moment to rest your eyes.</p> `,
+      choices: ["I'm ready to begin"],
+      post_trial_gap: 2000,
+      css_classes: ["instructions"],
     },
   ],
 };
@@ -113,18 +135,33 @@ const calibration_parameters = [
 
 const test_parameters = [];
 
-for (let i = 0; i < n_test_trials; i++) {
-  test_parameters.push({
-    x: jsPsych.randomization.randomInt(min_x, max_x),
-    y: jsPsych.randomization.randomInt(min_y, max_y),
-    type: "test",
-  });
+for (let b = 0; b < n_test_trials / n_test_trials_per_block; b++) {
+  test_parameters.push([]);
+  for (let i = 0; i < n_test_trials_per_block; i++) {
+    test_parameters[b].push({
+      x: jsPsych.randomization.randomInt(min_x, max_x),
+      y: jsPsych.randomization.randomInt(min_y, max_y),
+      type: "test",
+    });
+  }
+}
+
+// idea: change this to CallFunction and avoid the screen clear
+const preTestTrial = {
+  type: jsPsychHtmlKeyboardResponse,
+  stimulus: () => {
+    return `<div style="position: relative; width:100vw; height: 100vh; cursor: none;"><div class="fixation-point" style="top:${jsPsych.timelineVariable(
+      "y"
+    )}%; left:${jsPsych.timelineVariable("x")}%;"></div></div>`;
+  },
+  trial_duration: saccade_time,
+  choices: "NO_KEYS",
 }
 
 const testTrial = {
   type: jsPsychHtmlVideoResponse,
   stimulus: () => {
-    return `<div style="position: relative; width:100vw; height: 100vh;"><div class="fixation-point" style="top:${jsPsych.timelineVariable(
+    return `<div style="position: relative; width:100vw; height: 100vh; cursor: none;"><div class="fixation-point" style="top:${jsPsych.timelineVariable(
       "y"
     )}%; left:${jsPsych.timelineVariable("x")}%;"></div></div>`;
   },
@@ -136,7 +173,7 @@ const testTrial = {
     point_type: jsPsych.timelineVariable("type"),
   },
   on_finish: (data) => {
-    console.log(data.response);
+    n_complete++;
     fetch("server/save_webm.php", {
       method: "POST",
       body: JSON.stringify({
@@ -154,20 +191,41 @@ const testTrial = {
   },
 };
 
+const break_trial = {
+  type: jsPsychHtmlButtonResponse,
+  stimulus: () => {
+    return `<p>You have completed ${n_complete} of the ${
+      n_test_trials + calibration_parameters.length
+    } trials.</p>
+    <p>When you are ready to move on, click the button below.</p>`;
+  },
+  choices: ["Continue"],
+  post_trial_gap: 2000,
+};
+
 const calibration = {
-  timeline: [testTrial],
+  timeline: [preTestTrial, testTrial],
   timeline_variables: calibration_parameters,
-  randomize_order: true
+  randomize_order: true,
 };
 
 const test = {
-  timeline: [testTrial],
-  timeline_variables: test_parameters,
+  timeline: [],
 };
+
+for (const b of test_parameters) {
+  const block = {
+    timeline: [preTestTrial, testTrial],
+    timeline_variables: b,
+  };
+
+  test.timeline.push(block);
+  test.timeline.push(break_trial);
+}
 
 const save_all = {
   type: jsPsychCallFunction,
-  func: ()=>{
+  func: () => {
     fetch("server/save_json.php", {
       method: "POST",
       body: JSON.stringify({
@@ -178,16 +236,34 @@ const save_all = {
         "Content-Type": "application/json",
       },
     });
-  }
+  },
+  post_trial_gap: 2000,
+};
+
+const exit_full_screen = {
+  type: jsPsychFullscreen,
+  fullscreen_mode: false,
 }
+
+const final_instructions = {
+  timeline: [
+    {
+      type: jsPsychHtmlButtonResponse,
+      stimulus: `<p>Thank you for your participation. The study is now complete.</p>`,
+      choices: ["Done"],
+    },
+  ],
+};
 
 // Run Experiment
 jsPsych.run([
-  // instructions,
+  instructions,
   cameraSetup,
   fullscreen,
-  // taskInstructions,
+  taskInstructions,
   calibration,
   test,
-  save_all
+  save_all,
+  exit_full_screen,
+  final_instructions,
 ]);
