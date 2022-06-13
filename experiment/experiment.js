@@ -1,5 +1,6 @@
 const n_test_trials = 90;
 const n_test_trials_per_block = 30;
+const n_blocks = n_test_trials / n_test_trials_per_block;
 const trial_duration = 1500;
 const saccade_time = 500;
 const min_x = 5;
@@ -135,7 +136,7 @@ const calibration_parameters = [
 
 const test_parameters = [];
 
-for (let b = 0; b < n_test_trials / n_test_trials_per_block; b++) {
+for (let b = 0; b < n_blocks; b++) {
   test_parameters.push([]);
   for (let i = 0; i < n_test_trials_per_block; i++) {
     test_parameters[b].push({
@@ -195,7 +196,7 @@ const break_trial = {
   type: jsPsychHtmlButtonResponse,
   stimulus: () => {
     return `<p>You have completed ${n_complete} of the ${
-      n_test_trials + calibration_parameters.length
+      n_test_trials + calibration_parameters.length*n_blocks
     } trials.</p>
     <p>When you are ready to move on, click the button below.</p>`;
   },
@@ -213,12 +214,15 @@ const test = {
   timeline: [],
 };
 
-for (const b of test_parameters) {
+for (let block = 0; block < test_parameters.length; block++) {
   const block = {
     timeline: [preTestTrial, testTrial],
-    timeline_variables: b,
+    timeline_variables: test_parameters[block],
+    data: {
+      block: block
+    }
   };
-
+  test.timeline.push(calibration);
   test.timeline.push(block);
   test.timeline.push(break_trial);
 }
@@ -261,7 +265,6 @@ jsPsych.run([
   cameraSetup,
   fullscreen,
   taskInstructions,
-  calibration,
   test,
   save_all,
   exit_full_screen,
