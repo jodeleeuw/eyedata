@@ -148,14 +148,14 @@ for (let b = 0; b < n_test_trials / n_test_trials_per_block; b++) {
 
 // idea: change this to CallFunction and avoid the screen clear
 const preTestTrial = {
-  type: jsPsychHtmlKeyboardResponse,
-  stimulus: () => {
-    return `<div style="position: relative; width:100vw; height: 100vh; cursor: none;"><div class="fixation-point" style="top:${jsPsych.timelineVariable(
+  type: jsPsychCallFunction,
+  func: (done) => {
+    const display = jsPsych.getDisplayElement();
+    display.inner_html = `<div style="position: relative; width:100vw; height: 100vh; cursor: none;"><div class="fixation-point" style="top:${jsPsych.timelineVariable(
       "y"
     )}%; left:${jsPsych.timelineVariable("x")}%;"></div></div>`;
+    setTimeout(done, saccade_time);
   },
-  trial_duration: saccade_time,
-  choices: "NO_KEYS",
 }
 
 const testTrial = {
