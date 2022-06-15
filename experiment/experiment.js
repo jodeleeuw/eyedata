@@ -1,14 +1,30 @@
 const n_test_trials = 90;
 const n_test_trials_per_block = 30;
 const n_blocks = n_test_trials / n_test_trials_per_block;
-const trial_duration = 1500;
-const saccade_time = 500;
+const trial_duration = 1000;
+const saccade_time = 1000;
 const min_x = 5;
 const max_x = 95;
 const min_y = 5;
 const max_y = 95;
 
 let n_complete = 0;
+
+const calibration_parameters = [
+  { x: 10, y: 10, type: "calibration" },
+  { x: 50, y: 10, type: "calibration" },
+  { x: 90, y: 10, type: "calibration" },
+  { x: 10, y: 50, type: "calibration" },
+  { x: 50, y: 50, type: "calibration" },
+  { x: 90, y: 50, type: "calibration" },
+  { x: 10, y: 90, type: "calibration" },
+  { x: 50, y: 90, type: "calibration" },
+  { x: 90, y: 90, type: "calibration" },
+  { x: 30, y: 30, type: "calibration" },
+  { x: 70, y: 30, type: "calibration" },
+  { x: 30, y: 70, type: "calibration" },
+  { x: 70, y: 70, type: "calibration" },
+];
 
 const jsPsych = initJsPsych();
 
@@ -103,9 +119,9 @@ const taskInstructions = {
     {
       type: jsPsychHtmlButtonResponse,
       stimulus: `<p>There are ${
-        n_test_trials + 13
+        n_test_trials + calibration_parameters.length*3
       } dots that will be shown. Each one will be on the screen for ${
-        trial_duration / 1000
+        (trial_duration + saccade_time) / 1000
       } seconds.</p>
       <p>There will be a few short breaks in the experiment to let you take a moment to rest your eyes.</p> `,
       choices: ["I'm ready to begin"],
@@ -118,21 +134,7 @@ const taskInstructions = {
 // Recording Trials
 // - 13 calibration points (allows testing with 9 and 5 in training set)
 // - 30 (60? 90?) randomly uniformly sampled fixation points in two blocks
-const calibration_parameters = [
-  { x: 10, y: 10, type: "calibration" },
-  { x: 50, y: 10, type: "calibration" },
-  { x: 90, y: 10, type: "calibration" },
-  { x: 10, y: 50, type: "calibration" },
-  { x: 50, y: 50, type: "calibration" },
-  { x: 90, y: 50, type: "calibration" },
-  { x: 10, y: 90, type: "calibration" },
-  { x: 50, y: 90, type: "calibration" },
-  { x: 90, y: 90, type: "calibration" },
-  { x: 30, y: 30, type: "calibration" },
-  { x: 70, y: 30, type: "calibration" },
-  { x: 30, y: 70, type: "calibration" },
-  { x: 70, y: 70, type: "calibration" },
-];
+
 
 const test_parameters = [];
 
@@ -152,11 +154,13 @@ const preTestTrial = {
   type: jsPsychCallFunction,
   func: (done) => {
     const display = jsPsych.getDisplayElement();
-    display.inner_html = `<div style="position: relative; width:100vw; height: 100vh; cursor: none;"><div class="fixation-point" style="top:${jsPsych.timelineVariable(
-      "y"
-    )}%; left:${jsPsych.timelineVariable("x")}%;"></div></div>`;
+    display.innerHTML = `
+      <div style="position: relative; width:100vw; height: 100vh; cursor: none;">
+        <div class="fixation-point" style="top:${jsPsych.timelineVariable("y")}%; left:${jsPsych.timelineVariable("x")}%;"></div>
+      </div>`;
     setTimeout(done, saccade_time);
   },
+  async: true
 }
 
 const testTrial = {
@@ -179,6 +183,7 @@ const testTrial = {
       method: "POST",
       body: JSON.stringify({
         id: subject_id,
+        block: data.block,
         x: data.x,
         y: data.y,
         point_type: data.point_type,
@@ -188,7 +193,7 @@ const testTrial = {
         "Content-Type": "application/json",
       },
     });
-    data.response = `${subject_id}_${data.point_type}_${data.x}_${data.y}.webm`;
+    data.response = `${subject_id}_${data.block}_${data.point_type}_${data.x}_${data.y}.webm`;
   },
 };
 
@@ -204,22 +209,25 @@ const break_trial = {
   post_trial_gap: 2000,
 };
 
-const calibration = {
-  timeline: [preTestTrial, testTrial],
-  timeline_variables: calibration_parameters,
-  randomize_order: true,
-};
-
 const test = {
   timeline: [],
 };
 
-for (let block = 0; block < test_parameters.length; block++) {
+for (let b = 0; b < test_parameters.length; b++) {
+  const calibration = {
+    timeline: [preTestTrial, testTrial],
+    timeline_variables: calibration_parameters,
+    randomize_order: true,
+    data: {
+      block: b
+    }
+  };
+
   const block = {
     timeline: [preTestTrial, testTrial],
-    timeline_variables: test_parameters[block],
+    timeline_variables: test_parameters[b],
     data: {
-      block: block
+      block: b
     }
   };
   test.timeline.push(calibration);
