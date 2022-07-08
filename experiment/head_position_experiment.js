@@ -79,7 +79,7 @@ const testTrial = {
     }, 200);
   },
   on_finish: (data) => {
-    fetch("server/save_webm.php", {
+    fetch("server/save_webm_pose.php", {
       method: "POST",
       body: JSON.stringify({
         id: subject_id,
@@ -97,7 +97,7 @@ const testTrial = {
 const save_all = {
   type: jsPsychCallFunction,
   func: () => {
-    fetch("server/save_json.php", {
+    fetch("server/save_json_pose.php", {
       method: "POST",
       body: JSON.stringify({
         id: subject_id,
