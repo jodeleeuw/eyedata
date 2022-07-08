@@ -26,9 +26,24 @@ const calibration_parameters = [
   { x: 70, y: 70, type: "calibration" },
 ];
 
-const jsPsych = initJsPsych();
+const jsPsych = initJsPsych({
+  on_finish: ()=>{
+    window.location.href = "https://app.prolific.co/submissions/complete?cc=96A9C46B";
+  }
+});
 
 const subject_id = jsPsych.randomization.randomID(8);
+
+const prolific_id = jsPsych.data.getURLVariable('PROLIFIC_PID');
+const study_id = jsPsych.data.getURLVariable('STUDY_ID');
+const session_id = jsPsych.data.getURLVariable('SESSION_ID');
+
+jsPsych.data.addProperties({
+  subject_id: subject_id,
+  prolific_id: prolific_id,
+  study_id: study_id,
+  session_id: session_id
+});
 
 // Instructions
 const instructions = {
@@ -45,7 +60,7 @@ const instructions = {
     {
       type: jsPsychHtmlButtonResponse,
       stimulus: `<p>In order to complete this experiment, you will need to allow us to record from your device's camera.</p>
-            <p>We will record without audio, and each recording will be only a few seconds long, recording where you are looking on the screen.</p>
+            <p>We will record without audio, and each recording will be only about one second long.</p>
             <p>The video files that we record will become part of a public dataset that researchers can use to test new tools for eye tracking.</p>
             <p>If you are not comfortable with the videos we record during this experiment being released to the public, you should exit the experiment.</p>
             <p>You will also have a chance at the end of the experiment to decide whether to exclude your data from the public dataset, in case you change your mind during the experiment.</p>`,
@@ -78,7 +93,7 @@ const cameraSetup = {
     {
       type: jsPsychMirrorCamera,
       prompt:
-        "<p>Please adjust the camera, your position, and the lighting to get a good view of your face.</p>",
+        "<p>Please adjust the camera, your position, and the lighting to get a good view of your face and especially your eyes.</p>",
     },
   ],
 };
@@ -106,13 +121,6 @@ const taskInstructions = {
         <p>We will show you this dot at different places on your screen.</p> 
         <div style="position: relative; width:100%; height: 2em;"><div class="fixation-point" style="top:50%; left:50%;"></div></div>
         <p>While the dot is on the screen, please keep your gaze locked onto the dot.</p>`,
-      choices: ["Continue"],
-      css_classes: ["instructions"],
-    },
-    {
-      type: jsPsychHtmlButtonResponse,
-      stimulus: `<p>While the dot is on the screen and your gaze is locked onto the dot, please move your head!</p>
-        <p>Moving your head slightly left or right, tilting your head to the side, and moving slightly closer or further from the monitor will help us get better data about different poses that people may look at the location.</p>`,
       choices: ["Continue"],
       css_classes: ["instructions"],
     },
@@ -257,12 +265,38 @@ const exit_full_screen = {
   fullscreen_mode: false,
 }
 
+const final_survey = {
+  timeline: [
+    {
+      type: jsPsychHtmlButtonResponse,
+      stimulus: `<p>Thank you for participating!</p>
+      <p>The videos that we just recorded will be made available to the public for research purposes.</p>
+      <p>This will help the research community develop better tools for eye tracking on the web.</p>
+      <p>If you do not want your videos to be part of this public dataset, you can opt out by clicking the button below.</p>`,
+      choices: ["It is OK for my videos to be public", "I do not want my videos to be public"],
+    },
+    {
+      timeline: [
+        {
+          type: jsPsychHtmlButtonResponse,
+          stimulus: `<p>We will remove your videos from the public dataset.</p>
+          <p>Is it OK for us to use these videos in our own research? Only members of our research team will have access.</p>`,
+          choices: ["You can use my videos for research", "Please delete my videos completely"]
+        }
+      ],
+      conditional_function: () => {
+        return jsPsych.data.getLastTrialData().values()[0].response === 1;
+      }
+    },
+  ]
+}
+
 const final_instructions = {
   timeline: [
     {
       type: jsPsychHtmlButtonResponse,
-      stimulus: `<p>Thank you for your participation. The study is now complete.</p>`,
-      choices: ["Done"],
+      stimulus: `<p>Thank you for your participation. The study is now complete. Click the button below to return to Prolific.</p>`,
+      choices: ["Return to Prolific"],
     },
   ],
 };
