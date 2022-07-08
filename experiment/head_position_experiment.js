@@ -83,17 +83,13 @@ const testTrial = {
       method: "POST",
       body: JSON.stringify({
         id: subject_id,
-        block: data.block,
-        x: data.x,
-        y: data.y,
-        point_type: data.point_type,
         response: data.response,
       }),
       headers: {
         "Content-Type": "application/json",
       },
     });
-    data.response = `${subject_id}_${data.block}_${data.point_type}_${data.x}_${data.y}.webm`;
+    data.response = `${subject_id}_pose.webm`;
   },
 };
 
