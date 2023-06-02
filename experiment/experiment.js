@@ -110,7 +110,7 @@ const getAspectRatio = {
       features: ["width", "height", "fullscreen"],
       on_finish: function(data) {
         data.aspect_ratio = data.width / data.height
-        }
+        },
     },
   ],
 };
