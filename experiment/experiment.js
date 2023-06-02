@@ -1,6 +1,6 @@
 const n_test_trials = 144;
-const n_test_trials_per_block = 48;
-const n_blocks = n_test_trials / n_test_trials_per_block;
+const n_test_trials_per_block = 3 //48;
+const n_blocks = 1 //n_test_trials / n_test_trials_per_block;
 const trial_duration = 1000;
 const saccade_time = 1000;
 const min_x = 5;
@@ -10,11 +10,18 @@ const max_y = 95;
 
 let n_complete = 0;
 
+/*
 const jsPsych = initJsPsych({
   on_finish: ()=>{
     window.location.href = "https://app.prolific.co/submissions/complete?cc=96A9C46B";
   }
 });
+*/
+const jsPsych = initJsPsych({
+  on_finish: function() {
+    jsPsych.data.displayData();
+  }
+})
 
 const subject_id = jsPsych.randomization.randomID(8);
 
@@ -95,6 +102,20 @@ const fullscreen = {
     },
   ],
 };
+
+// for some reason this isn't working
+const getAspectRatio = {
+  timeline: [
+    {
+      type: jsPsychBrowserCheck,
+      features: ["width", "height", "fullscreen"],
+      on_finish: function(data) {
+        data.aspect_ratio = data.width / data.height
+        }
+    },
+  ],
+};
+
 
 // Task Instructions
 const taskInstructions = {
