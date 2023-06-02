@@ -103,7 +103,6 @@ const fullscreen = {
   ],
 };
 
-// for some reason this isn't working
 const getAspectRatio = {
   timeline: [
     {
@@ -315,6 +314,7 @@ jsPsych.run([
   instructions,
   cameraSetup,
   fullscreen,
+  getAspectRatio,
   taskInstructions,
   test,
   save_all,
