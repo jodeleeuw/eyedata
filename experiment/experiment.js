@@ -1,5 +1,5 @@
-const n_test_trials = 90;
-const n_test_trials_per_block = 30;
+const n_test_trials = 144;
+const n_test_trials_per_block = 48;
 const n_blocks = n_test_trials / n_test_trials_per_block;
 const trial_duration = 1000;
 const saccade_time = 1000;
@@ -9,22 +9,6 @@ const min_y = 5;
 const max_y = 95;
 
 let n_complete = 0;
-
-const calibration_parameters = [
-  { x: 10, y: 10, type: "calibration" },
-  { x: 50, y: 10, type: "calibration" },
-  { x: 90, y: 10, type: "calibration" },
-  { x: 10, y: 50, type: "calibration" },
-  { x: 50, y: 50, type: "calibration" },
-  { x: 90, y: 50, type: "calibration" },
-  { x: 10, y: 90, type: "calibration" },
-  { x: 50, y: 90, type: "calibration" },
-  { x: 90, y: 90, type: "calibration" },
-  { x: 30, y: 30, type: "calibration" },
-  { x: 70, y: 30, type: "calibration" },
-  { x: 30, y: 70, type: "calibration" },
-  { x: 70, y: 70, type: "calibration" },
-];
 
 const jsPsych = initJsPsych({
   on_finish: ()=>{
@@ -127,7 +111,7 @@ const taskInstructions = {
     {
       type: jsPsychHtmlButtonResponse,
       stimulus: `<p>There are ${
-        n_test_trials + calibration_parameters.length*3
+        n_test_trials
       } dots that will be shown. Each one will be on the screen for ${
         (trial_duration + saccade_time) / 1000
       } seconds.</p>
@@ -140,18 +124,30 @@ const taskInstructions = {
 };
 
 // Recording Trials
-// - 13 calibration points (allows testing with 9 and 5 in training set)
-// - 30 (60? 90?) randomly uniformly sampled fixation points in two blocks
+// 16:9 grid of 144 fixation points across 3 blocks. Points are randomly sampled w/o replacement.
 
+// Generate coordinates for grid of pints
+const point_grid = [];
 
+for (let x = 5; x <= 95; x += (90/15)) {
+    for(let y = 5; y <= 95; y += (90/8)) {
+        point_grid.push([x, y]);
+    }
+}
+
+// Test stimuli array
 const test_parameters = [];
 
 for (let b = 0; b < n_blocks; b++) {
-  test_parameters.push([]);
+  test_parameters.push([]); 
   for (let i = 0; i < n_test_trials_per_block; i++) {
+    let idx = Math.floor(Math.random() * point_grid.length); // Generate a random index in range of point_grid
+    let point = point_grid[idx]; // Get the randomly selected point
+    point_grid.splice(idx, 1); // Remove point from point_grid
+    // let point = point_grid[i] // This is to confirm that grid works
     test_parameters[b].push({
-      x: jsPsych.randomization.randomInt(min_x, max_x),
-      y: jsPsych.randomization.randomInt(min_y, max_y),
+      x: point[0],
+      y: point[1],
       type: "test",
     });
   }
@@ -160,7 +156,7 @@ for (let b = 0; b < n_blocks; b++) {
 // idea: change this to CallFunction and avoid the screen clear
 const preTestTrial = {
   type: jsPsychCallFunction,
-  func: (done) => {
+  func: (done) => {   // done function doesn't do anything
     const display = jsPsych.getDisplayElement();
     display.innerHTML = `
       <div style="position: relative; width:100vw; height: 100vh; cursor: none;">
@@ -209,7 +205,7 @@ const break_trial = {
   type: jsPsychHtmlButtonResponse,
   stimulus: () => {
     return `<p>You have completed ${n_complete} of the ${
-      n_test_trials + calibration_parameters.length*n_blocks
+      n_test_trials
     } trials.</p>
     <p>When you are ready to move on, click the button below.</p>`;
   },
@@ -221,15 +217,8 @@ const test = {
   timeline: [],
 };
 
+
 for (let b = 0; b < test_parameters.length; b++) {
-  const calibration = {
-    timeline: [preTestTrial, testTrial],
-    timeline_variables: calibration_parameters,
-    randomize_order: true,
-    data: {
-      block: b
-    }
-  };
 
   const block = {
     timeline: [preTestTrial, testTrial],
@@ -238,7 +227,6 @@ for (let b = 0; b < test_parameters.length; b++) {
       block: b
     }
   };
-  test.timeline.push(calibration);
   test.timeline.push(block);
   test.timeline.push(break_trial);
 }

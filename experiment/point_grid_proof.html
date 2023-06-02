@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Eye Data Experiment Playground</title>
+    <script src="https://unpkg.com/jspsych@7.3.3"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.2"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-image-keyboard-response@1.1.2"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-preload@1.1.2"></script>
+    <link href="https://unpkg.com/jspsych@7.3.3/css/jspsych.css" rel="stylesheet" type="text/css" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/jspsych@7.2/css/jspsych.css"
+    />
+    <link rel="stylesheet" href="fixation.css" />
+    <style>
+      .jspsych-content {
+        max-width: none;
+      }
+      .instructions {
+        width: 75vw;
+      }
+    </style>
+  </head>
+  <body></body>
+  <script>
+
+    /* initialize jsPsych */
+    var jsPsych = initJsPsych();
+
+    /* create timeline */
+    var timeline = [];
+
+    /* define welcome message trial */
+    var welcome = {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus: "Welcome to the experiment. Press any key to begin."
+    };
+    timeline.push(welcome);
+
+    
+    /* define trial stimuli array for timeline variables */
+
+    // Generate grid of points
+    // 1. Define array to store points
+    // 2. Iteratively generate one row of points (x = 5, y = 5; x += 90/16, y = 5)
+    // 3. One point is a two-element array [x, y]
+    // 3. Increase x value by one
+    // 4. Repeat step 2 with new x value
+
+    const test_parameters = [];
+
+    for (let x = 5; x <= 95; x += (90/15)) {
+        for(let y = 5; y <= 95; y += (90/8)) {
+            test_parameters.push({
+                xcoord: x,
+                ycoord: y,
+            });
+        }
+
+    }
+
+    var testTrial = {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus: () => {
+        return `<div style="position: relative; width:100vw; height: 100vh; cursor: none;">
+                <div class="fixation-point" style="top:${jsPsych.timelineVariable("ycoord")}%; left:${jsPsych.timelineVariable("xcoord")}%;">
+                    </div></div>`;
+  },
+      choices: ['q']/*,
+      data: {
+        task: 'response',
+        correct_response: jsPsych.timelineVariable('correct_response')
+      },
+      on_finish: function(data){
+        data.correct = jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);
+      }*/
+    };
+
+    /* define test procedure */
+    var test_procedure = {
+      timeline: [testTrial],
+      timeline_variables: test_parameters,
+      repetitions: 1,
+      randomize_order: false
+    };
+    timeline.push(test_procedure);
+
+    /* start the experiment */
+    jsPsych.run(timeline);
+
+  </script>
+</html>
+
