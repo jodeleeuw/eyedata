@@ -6,6 +6,8 @@
     <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.2"></script>
     <script src="https://unpkg.com/@jspsych/plugin-image-keyboard-response@1.1.2"></script>
     <script src="https://unpkg.com/@jspsych/plugin-preload@1.1.2"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-fullscreen@1.2.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-browser-check@1.0.2"></script>
     <link href="https://unpkg.com/jspsych@7.3.3/css/jspsych.css" rel="stylesheet" type="text/css" />
     <link
       rel="stylesheet"
@@ -25,7 +27,11 @@
   <script>
 
     /* initialize jsPsych */
-    var jsPsych = initJsPsych();
+    var jsPsych = initJsPsych({
+      on_finish: function() {
+        jsPsych.data.displayData();
+      }
+    }); 
 
     /* create timeline */
     var timeline = [];
@@ -37,6 +43,22 @@
     };
     timeline.push(welcome);
 
+    // Fullscreen
+    var fullscreen = {
+          type: jsPsychFullscreen,
+          fullscreen_mode: true,
+          button_label: "Enter Fullscreen",
+          delay_after: 200,
+        };
+
+    timeline.push(fullscreen);
+
+    var getPixRes = {
+      type: jsPsychBrowserCheck,
+      features: ["width", "height", "fullscreen"]
+    }
+
+    timeline.push(getPixRes)
     
     /* define trial stimuli array for timeline variables */
 
@@ -56,7 +78,7 @@ for (let x = 5; x <= 95; x += (90/15)) {
     }
 }
 
-const n_test_trials = 144;
+const n_test_trials = 10;
 const n_test_trials_per_block = 48;
 const n_blocks = n_test_trials / n_test_trials_per_block;
 
