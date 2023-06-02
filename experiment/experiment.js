@@ -91,6 +91,16 @@ const cameraSetup = {
       width: 480,
     },
     {
+      type: jsPsychHtmlButtonResponse,
+      stimulus: `
+         <p>Are you using an integrated or external webcam? Images below for reference:
+         <div style='width: 1000px;'>
+         <div style='float: left;'><img src='img/laptop-webcam.jpeg'></img> 
+         <div style='float: right;'><img src='img/external-webcam-atop-computer-1024x691.jpg'></img>
+         `,
+      choices: ["Integrated Webcam", "External Webcam"], 
+    },
+    {
       type: jsPsychMirrorCamera,
       prompt:
         "<p>Please adjust the camera, your position, and the lighting to get a good view of your face and especially your eyes.</p>",
