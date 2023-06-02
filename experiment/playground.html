@@ -53,12 +53,15 @@
 
     timeline.push(fullscreen);
 
-    var getPixRes = {
+    var getAspectRatio = {
       type: jsPsychBrowserCheck,
-      features: ["width", "height", "fullscreen"]
+      features: ["width", "height", "fullscreen"],
+      on_finish: function(data) {
+        data.aspect_ratio = data.width / data.height
+      }
     }
 
-    timeline.push(getPixRes)
+    timeline.push(getAspectRatio)
     
     /* define trial stimuli array for timeline variables */
 
