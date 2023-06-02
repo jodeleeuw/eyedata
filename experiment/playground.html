@@ -56,19 +56,18 @@ for (let x = 5; x <= 95; x += (90/15)) {
     }
 }
 
-const n_test_trials = 90;
-const n_test_trials_per_block = 30;
+const n_test_trials = 144;
+const n_test_trials_per_block = 48;
 const n_blocks = n_test_trials / n_test_trials_per_block;
 
 // Test stimuli array
 const test_parameters = [];
 
 for (let b = 0; b < n_blocks; b++) {
-  test_parameters.push([]);
-  for (let i = 0; i < n_test_trials_per_block; i++) {
-    // let point = jsPsych.randomization.sampleWithoutReplacement(point_grid)
+  // test_parameters.push([]);
+  for (let i = 0; i < n_test_trials; i++) {
     let point = point_grid[i]
-    test_parameters[b].push({
+    test_parameters.push({
       x: point[0],
       y: point[1],
       type: "test",
@@ -90,7 +89,7 @@ for (let b = 0; b < n_blocks; b++) {
     var test_procedure = {
       timeline: [testTrial],
       timeline_variables: test_parameters,
-      repetitions: 1,
+      repetitions: 0,
       randomize_order: false
     };
     timeline.push(test_procedure);

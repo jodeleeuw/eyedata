@@ -47,40 +47,49 @@
     // 3. Increase x value by one
     // 4. Repeat step 2 with new x value
 
-    const test_parameters = [];
+    
+const point_grid = [];
 
-    for (let x = 5; x <= 95; x += (90/15)) {
-        for(let y = 5; y <= 95; y += (90/8)) {
-            test_parameters.push({
-                xcoord: x,
-                ycoord: y,
-            });
-        }
-
+for (let x = 5; x <= 95; x += (90/15)) {
+    for(let y = 5; y <= 95; y += (90/8)) {
+        point_grid.push([x, y]);
     }
+}
+
+const n_test_trials = 144;
+const n_test_trials_per_block = 48;
+const n_blocks = n_test_trials / n_test_trials_per_block;
+
+// Test stimuli array
+const test_parameters = [];
+
+for (let b = 0; b < n_blocks; b++) {
+  // test_parameters.push([]);
+  for (let i = 0; i < n_test_trials; i++) {
+    let point = point_grid[i]
+    test_parameters.push({
+      x: point[0],
+      y: point[1],
+      type: "test",
+    });
+  }
+}
 
     var testTrial = {
       type: jsPsychHtmlKeyboardResponse,
       stimulus: () => {
         return `<div style="position: relative; width:100vw; height: 100vh; cursor: none;">
-                <div class="fixation-point" style="top:${jsPsych.timelineVariable("ycoord")}%; left:${jsPsych.timelineVariable("xcoord")}%;">
+                <div class="fixation-point" style="top:${jsPsych.timelineVariable("y")}%; left:${jsPsych.timelineVariable("x")}%;">
                     </div></div>`;
   },
-      choices: ['q']/*,
-      data: {
-        task: 'response',
-        correct_response: jsPsych.timelineVariable('correct_response')
-      },
-      on_finish: function(data){
-        data.correct = jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);
-      }*/
+      choices: ['q']
     };
 
     /* define test procedure */
     var test_procedure = {
       timeline: [testTrial],
       timeline_variables: test_parameters,
-      repetitions: 1,
+      repetitions: 0,
       randomize_order: false
     };
     timeline.push(test_procedure);
